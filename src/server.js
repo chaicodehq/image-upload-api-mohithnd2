@@ -1,13 +1,14 @@
-import { createApp } from './app.js';
-import { connectDB } from './db/connect.js';
+import { createApp } from "./app.js";
+import { connectDB } from "./db/connect.js";
 
 async function start() {
   try {
     // TODO: Read PORT from process.env, default to 3000
-    const port = undefined;
+    const port = process.env.PORT || 3000;
 
     // TODO: Read MONGO_URI from process.env, default to "mongodb://localhost:27017/image_upload_api"
-    const uri = undefined;
+    const uri =
+      process.env.MONGO_URI || "mongodb://localhost:27017/image_upload_api";
 
     await connectDB(uri);
     const app = createApp();
@@ -16,7 +17,7 @@ async function start() {
       console.log(`Server running on port ${port}`);
     });
   } catch (error) {
-    console.error('Failed to start server:', error);
+    console.error("Failed to start server:", error);
     process.exit(1);
   }
 }

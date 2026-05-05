@@ -1,9 +1,14 @@
-import sharp from 'sharp';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import sharp from "sharp";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const THUMBNAILS_DIR = path.join(__dirname, '../../uploads/thumbnails');
+const THUMBNAILS_DIR = path.join(__dirname, "../../uploads/thumbnails");
+
+if (!fs.existsSync(THUMBNAILS_DIR)) {
+  fs.mkdirSync(THUMBNAILS_DIR, { recursive: true });
+}
 
 /**
  * TODO: Generate thumbnail for uploaded image
@@ -35,7 +40,31 @@ const THUMBNAILS_DIR = path.join(__dirname, '../../uploads/thumbnails');
  * // Creates: uploads/thumbnails/thumb-1704067200000-abc123.jpg
  */
 export async function generateThumbnail(filename) {
-  // Your code here
+  const inputPath = path.join(__dirname, "../../uploads", filename);
+
+  const thumbnailName = "thumb-" + filename.replace(/\.\w+$/, ".jpg");
+  const outputPath = path.join(THUMBNAILS_DIR, thumbnailName);
+
+  const metadata = await sharp(inputPath).metadata();
+
+  const isSmallImage = metadata.width <= 200 && metadata.height <= 200;
+
+  if (isSmallImage) {
+    await fs.promises.copyFile(inputPath, outputPath);
+    return thumbnailName;
+  }
+
+  await sharp(inputPath)
+    .resize(200, 200, {
+      fit: "inside",
+      withoutEnlargement: true,
+    })
+    .jpeg({
+      quality: 80,
+    })
+    .toFile(outputPath);
+
+  return thumbnailName;
 }
 
 /**
@@ -58,5 +87,9 @@ export async function generateThumbnail(filename) {
  * // Returns: { width: 1920, height: 1080 }
  */
 export async function getImageDimensions(filepath) {
-  // Your code here
+  const metadata = await sharp(filepath).metadata();
+  return {
+    width: metadata.width,
+    height: metadata.height,
+  };
 }
